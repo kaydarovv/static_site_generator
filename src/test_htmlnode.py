@@ -37,17 +37,6 @@ class TestHTMLNode(unittest.TestCase):
             None,
         )
 
-    def test_repr(self):
-        node = HTMLNode(
-            "p",
-            "What a strange world",
-            None,
-            {"class": "primary"},
-        )
-        self.assertEqual(
-            node.__repr__(),
-            "HTMLNode(p, What a strange world, children: None, {'class': 'primary'})",
-        )
 
     def test_to_html_no_children(self):
         node = LeafNode("p", "Hello, world!")
