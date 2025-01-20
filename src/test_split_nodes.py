@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType
-from inline_md import split_nodes_delimiter
+from inline_md import split_nodes_delimiter, split_nodes_link, split_nodes_image
 
 
 class TestTextNode(unittest.TestCase):
@@ -59,7 +59,112 @@ class TestTextNode(unittest.TestCase):
         assert new_nodes[1].text_type == TextType.ITALIC
         assert new_nodes[2].text == " delimiters"
         assert new_nodes[2].text_type == TextType.TEXT
+
+    def test_split_nodes_link(self):
+        # Test 1: Single link
+        node = TextNode("Start [link](url) end", TextType.TEXT)
+        new_nodes = split_nodes_link([node])
+        assert len(new_nodes) == 3
+        assert new_nodes[0].text == "Start "
+        assert new_nodes[0].text_type == TextType.TEXT
+        assert new_nodes[1].text == "link"
+        assert new_nodes[1].text_type == TextType.LINK
+        assert new_nodes[2].text == " end"
+        assert new_nodes[2].text_type == TextType.TEXT
+
+        # Test 2: Two links
+        node = TextNode("This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)", TextType.TEXT,)
+        new_nodes = split_nodes_link([node])
+
+        assert len(new_nodes) == 4
+        assert new_nodes[0].text == "This is text with a link "
+        assert new_nodes[0].text_type == TextType.TEXT
+        assert new_nodes[1].text == "to boot dev"
+        assert new_nodes[1].text_type == TextType.LINK
+        assert new_nodes[1].url == "https://www.boot.dev"
+        assert new_nodes[2].text == " and "
+        assert new_nodes[2].text_type == TextType.TEXT
+        assert new_nodes[3].text == "to youtube"
+        assert new_nodes[3].text_type == TextType.LINK
+        assert new_nodes[3].url == "https://www.youtube.com/@bootdotdev"
+
+        # Test 3: Empty input
+        node = TextNode("", TextType.TEXT)
+        new_nodes = split_nodes_link([node])
+        assert new_nodes[0].text == ""
+        assert new_nodes[0].text_type == TextType.TEXT
+
+        # Test 4: No links
+        node = TextNode("Just plain text", TextType.TEXT)
+        new_nodes = split_nodes_link([node])
+        assert new_nodes[0].text == "Just plain text"
+        assert new_nodes[0].text_type == TextType.TEXT
+
+        # Test 5: Adjacent links
+        node = TextNode("Start [one](url1)[two](url2) end", TextType.TEXT)
+        new_nodes = split_nodes_link([node])
+        assert len(new_nodes) == 4
+        assert new_nodes[0].text == "Start "
+        assert new_nodes[0].text_type == TextType.TEXT
+        assert new_nodes[1].text == "one"
+        assert new_nodes[1].text_type == TextType.LINK
+        assert new_nodes[2].text == "two"
+        assert new_nodes[2].text_type == TextType.LINK
+        assert new_nodes[3].text == " end"
+        assert new_nodes[3].text_type == TextType.TEXT
         
+
+    def test_split_nodes_image(self):
+        # Test 1: Single image
+        node = TextNode("Start ![image](url) end", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        assert len(new_nodes) == 3
+        assert new_nodes[0].text == "Start "
+        assert new_nodes[0].text_type == TextType.TEXT
+        assert new_nodes[1].text == "image"
+        assert new_nodes[1].text_type == TextType.IMAGE
+        assert new_nodes[2].text == " end"
+        assert new_nodes[2].text_type == TextType.TEXT
+
+        # Test 2: Two images
+        node = TextNode("This is text with an image ![to boot dev](imgs/boot.jpg) and ![to youtube](imgs/www.youtube.com/@bootdotdev.png)", TextType.TEXT,)
+        new_nodes = split_nodes_image([node])
+        assert len(new_nodes) == 4
+        assert new_nodes[0].text == "This is text with an image "
+        assert new_nodes[0].text_type == TextType.TEXT
+        assert new_nodes[1].text == "to boot dev"
+        assert new_nodes[1].text_type == TextType.IMAGE
+        assert new_nodes[1].url == "imgs/boot.jpg"
+        assert new_nodes[2].text == " and "
+        assert new_nodes[2].text_type == TextType.TEXT
+        assert new_nodes[3].text == "to youtube"
+        assert new_nodes[3].text_type == TextType.IMAGE
+        assert new_nodes[3].url == "imgs/www.youtube.com/@bootdotdev.png"
+
+        # Test 3: Empty input
+        node = TextNode("", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        assert new_nodes[0].text == ""
+        assert new_nodes[0].text_type == TextType.TEXT
+
+        # Test 4: No images
+        node = TextNode("Just plain text", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        assert new_nodes[0].text == "Just plain text"
+        assert new_nodes[0].text_type == TextType.TEXT
+
+        # Test 5: Adjacent images
+        node = TextNode("Start ![one](url1)![two](url2) end", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        assert len(new_nodes) == 4
+        assert new_nodes[0].text == "Start "
+        assert new_nodes[0].text_type == TextType.TEXT
+        assert new_nodes[1].text == "one"
+        assert new_nodes[1].text_type == TextType.IMAGE
+        assert new_nodes[2].text == "two"
+        assert new_nodes[2].text_type == TextType.IMAGE
+        assert new_nodes[3].text == " end"
+        assert new_nodes[3].text_type == TextType.TEXT
 
 if __name__ == "__main__":
     unittest.main()
