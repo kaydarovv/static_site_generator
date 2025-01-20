@@ -2,6 +2,16 @@ import re
 
 from textnode import TextNode, TextType
 
+def extract_markdown_images(text: str) -> list[tuple[str,str]]:
+    pattern = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    matches = re.findall(pattern, text)
+    return matches
+
+def extract_markdown_links(text: str) -> list[tuple[str,str]]:
+    pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    matches = re.findall(pattern, text)
+    return matches
+
 def split_nodes_delimiter(old_nodes: list, delimiter: str, text_type: TextType) -> list[TextNode]:
     new_nodes = []
 
@@ -80,13 +90,21 @@ def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
 
     return new_nodes
 
-def extract_markdown_images(text: str) -> list[tuple[str,str]]:
-    pattern = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
-    matches = re.findall(pattern, text)
-    return matches
-
-def extract_markdown_links(text: str) -> list[tuple[str,str]]:
-    pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
-    matches = re.findall(pattern, text)
-    return matches
-
+def text_to_textnodes(text: str) -> list[TextNode]:
+    parsing_sequence = [
+        (split_nodes_image, None),
+        (split_nodes_link, None),
+        (split_nodes_delimiter, ("`", TextType.CODE)),
+        (split_nodes_delimiter, ("**", TextType.BOLD)),
+        (split_nodes_delimiter, ("*", TextType.ITALIC))
+    ]
+    node = TextNode(text, TextType.TEXT)
+    result = [node]
+    for parser_func, args in parsing_sequence:
+        if args is None:
+            result = parser_func(result)
+        else:
+            delimiter, text_type = args
+            result = parser_func(result, delimiter, text_type)
+            
+    return result

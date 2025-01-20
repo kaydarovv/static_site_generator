@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType
-from inline_md import split_nodes_delimiter, split_nodes_link, split_nodes_image
+from inline_md import split_nodes_delimiter, split_nodes_link, split_nodes_image, text_to_textnodes
 
 
 class TestTextNode(unittest.TestCase):
@@ -165,6 +165,90 @@ class TestTextNode(unittest.TestCase):
         assert new_nodes[2].text_type == TextType.IMAGE
         assert new_nodes[3].text == " end"
         assert new_nodes[3].text_type == TextType.TEXT
+
+
+    def test_text_to_textnodes(self):
+        text = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        new_nodes = text_to_textnodes(text)
+        assert len(new_nodes) == 10
+        assert new_nodes[0].text == "This is "
+        assert new_nodes[0].text_type == TextType.TEXT
+        assert new_nodes[1].text == "text"
+        assert new_nodes[1].text_type == TextType.BOLD
+        assert new_nodes[2].text == " with an "
+        assert new_nodes[2].text_type == TextType.TEXT
+        assert new_nodes[3].text == "italic"
+        assert new_nodes[3].text_type == TextType.ITALIC
+        assert new_nodes[4].text == " word and a "
+        assert new_nodes[4].text_type == TextType.TEXT
+        assert new_nodes[5].text == "code block"
+        assert new_nodes[5].text_type == TextType.CODE
+        assert new_nodes[6].text == " and an "
+        assert new_nodes[6].text_type == TextType.TEXT
+        assert new_nodes[7].text == "obi wan image"
+        assert new_nodes[7].text_type == TextType.IMAGE
+        assert new_nodes[7].url == "https://i.imgur.com/fJRm4Vk.jpeg"
+        assert new_nodes[8].text == " and a "
+        assert new_nodes[8].text_type == TextType.TEXT
+        assert new_nodes[9].text == "link"
+        assert new_nodes[9].text_type == TextType.LINK
+        assert new_nodes[9].url == "https://boot.dev"
+
+        # Test 1: Multiple of the same type
+        text1 = "This is **bold** and this is also **bold**"
+        nodes1 = text_to_textnodes(text1)
+        assert len(nodes1) == 5
+        assert nodes1[0].text == "This is "
+        assert nodes1[0].text_type == TextType.TEXT
+        assert nodes1[1].text == "bold"
+        assert nodes1[1].text_type == TextType.BOLD
+        assert nodes1[2].text == " and this is also "
+        assert nodes1[2].text_type == TextType.TEXT
+        assert nodes1[3].text == "bold"
+        assert nodes1[3].text_type == TextType.BOLD
+        assert nodes1[4].text == ""
+        assert nodes1[4].text_type == TextType.TEXT
+
+        # Test 3: Multiple different types
+        text3 = "Here's `code` with *italic* and **bold** and ![image](test.jpg)"
+        nodes3 = text_to_textnodes(text3)
+        assert len(nodes3) == 8
+        assert nodes3[0].text == "Here's "
+        assert nodes3[0].text_type == TextType.TEXT
+        assert nodes3[1].text == "code"
+        assert nodes3[1].text_type == TextType.CODE
+        assert nodes3[2].text == " with "
+        assert nodes3[2].text_type == TextType.TEXT
+        assert nodes3[3].text == "italic"
+        assert nodes3[3].text_type == TextType.ITALIC
+        assert nodes3[4].text == " and "
+        assert nodes3[4].text_type == TextType.TEXT
+        assert nodes3[5].text == "bold"
+        assert nodes3[5].text_type == TextType.BOLD
+        assert nodes3[6].text == " and "
+        assert nodes3[6].text_type == TextType.TEXT
+        assert nodes3[7].text == "image"
+        assert nodes3[7].text_type == TextType.IMAGE
+        assert nodes3[7].url == "test.jpg"
+
+        # Test 4: Bad formatting
+        text4 = "This is *italic but missing end"
+        with self.assertRaises(Exception):
+            text_to_textnodes(text4)
+
+        # Test 5: Links and images together
+        text5 = "![image](test.jpg) and [link](https://boot.dev)"
+        nodes5 = text_to_textnodes(text5)
+        assert len(nodes5) == 3
+        assert nodes5[0].text == "image"
+        assert nodes5[0].text_type == TextType.IMAGE
+        assert nodes5[0].url == "test.jpg"
+        assert nodes5[1].text == " and "
+        assert nodes5[1].text_type == TextType.TEXT
+        assert nodes5[2].text == "link"
+        assert nodes5[2].text_type == TextType.LINK
+        assert nodes5[2].url == "https://boot.dev"
+
 
 if __name__ == "__main__":
     unittest.main()
