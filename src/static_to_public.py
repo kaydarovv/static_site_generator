@@ -24,7 +24,7 @@ def copy_recursively(source: str, destination: str) -> None:
 
 def source_to_destination(source: str, destination: str) -> None:
     if not os.path.exists(destination):
-        raise Exception("destination folder path in invalid or doesn't exist")
+        os.mkdir(destination)
     logger.info(f"Cleaning {destination} that contains: {os.listdir(destination)}")
     shutil.rmtree(destination)
     os.mkdir(destination)
