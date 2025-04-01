@@ -1,6 +1,6 @@
 # Static Site Generator
 
-A lightweight Python-based static site generator that converts Markdown files to HTML. Built to demonstrate practical implementation of recursion, functions, and classes.
+Python-based static site generator that converts Markdown files to HTML. Built to test practical implementation of recursion, functions, and classes.
 
 ## Core Features
 - Converts .md files to .html
